@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/windsurfpg/static/js/main.b1d3e2d7.js",
+    "main.js": "/windsurfpg/static/js/main.826a1de3.js",
     "index.html": "/windsurfpg/index.html",
-    "main.b1d3e2d7.js.map": "/windsurfpg/static/js/main.b1d3e2d7.js.map"
+    "main.826a1de3.js.map": "/windsurfpg/static/js/main.826a1de3.js.map"
   },
   "entrypoints": [
-    "static/js/main.b1d3e2d7.js"
+    "static/js/main.826a1de3.js"
   ]
 }
