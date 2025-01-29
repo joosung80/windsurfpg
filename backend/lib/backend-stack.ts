@@ -151,7 +151,7 @@ export class BackendStack extends cdk.Stack {
           'X-Api-Key',
           'X-Amz-Security-Token'
         ],
-        allowCredentials: true
+        allowCredentials: false
       }
     });
 
