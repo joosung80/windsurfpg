@@ -1,6 +1,6 @@
 import { Todo } from '../types/todo';
 
-const API_URL = 'https://cwxhc8o84b.execute-api.ap-northeast-2.amazonaws.com/prod';
+const API_URL = process.env.REACT_APP_API_URL;
 
 // Todo 목록 조회
 export const getTodos = async (): Promise<Todo[]> => {
