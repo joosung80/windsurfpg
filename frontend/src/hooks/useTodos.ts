@@ -64,9 +64,13 @@ export const useTodos = () => {
   const removeTodo = async (id: string) => {
     try {
       setLoading(true);
+      // UI를 즉시 업데이트
+      setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
+      // 서버에 삭제 요청
       await deleteTodo(id);
-      await fetchTodos();
     } catch (err) {
+      // 삭제 실패 시 이전 상태로 복원
+      await fetchTodos();
       throw err instanceof Error ? err : new Error('할 일을 삭제하는데 실패했습니다.');
     } finally {
       setLoading(false);
