@@ -136,3 +136,44 @@ cdk deploy
 자세한 내용은 다음 문서를 참조하세요:
 - [설계 문서](doc/design.md)
 - [구현 체크리스트](doc/todo.md)
+
+## AWS 아키텍처
+
+```mermaid
+graph TD
+    Frontend[React Frontend<br/>S3 Static Website] -->|API 요청| APIGW[API Gateway]
+    APIGW -->|호출| Lambda1[GetTodos Lambda]
+    APIGW -->|호출| Lambda2[CreateTodo Lambda]
+    APIGW -->|호출| Lambda3[UpdateTodo Lambda]
+    APIGW -->|호출| Lambda4[DeleteTodo Lambda]
+    Lambda1 -->|CRUD| DDB[(DynamoDB)]
+    Lambda2 -->|CRUD| DDB
+    Lambda3 -->|CRUD| DDB
+    Lambda4 -->|CRUD| DDB
+```
+
+### 컴포넌트 설명
+
+#### Frontend
+- **S3 Static Website**: React 기반의 프론트엔드 애플리케이션을 호스팅
+- 정적 웹사이트 호스팅 기능을 사용하여 웹 애플리케이션 제공
+
+#### Backend
+- **API Gateway**: RESTful API 엔드포인트 제공
+  - CORS 설정으로 프론트엔드와의 안전한 통신 보장
+  - HTTP 메서드: GET, POST, PUT, DELETE 지원
+
+- **Lambda Functions**:
+  - `GetTodos`: 할 일 목록 조회
+  - `CreateTodo`: 새로운 할 일 생성
+  - `UpdateTodo`: 기존 할 일 수정
+  - `DeleteTodo`: 할 일 삭제
+
+- **DynamoDB**: 
+  - 서버리스 NoSQL 데이터베이스
+  - 할 일 데이터 영구 저장
+  - 속성: id, title, description, completed, createdAt
+
+### 배포
+- GitHub Actions를 통한 자동 배포
+- CDK를 사용한 인프라스트럭처 관리

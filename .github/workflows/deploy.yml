@@ -1,0 +1,90 @@
+name: Deploy Todo App
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+
+      # 백엔드 배포
+      - name: Deploy Backend
+        working-directory: backend
+        run: |
+          npm install
+          npm run build
+          cdk deploy --require-approval never
+
+      # API Gateway URL 등 정보 가져오기
+      - name: Get Stack Outputs
+        id: stack-outputs
+        run: |
+          API_URL=$(aws cloudformation describe-stacks --stack-name TodoAppStack --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
+          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name TodoAppStack --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' --output text)
+          USER_POOL_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name TodoAppStack --query 'Stacks[0].Outputs[?OutputKey==`UserPoolClientId`].OutputValue' --output text)
+          IDENTITY_POOL_ID=$(aws cloudformation describe-stacks --stack-name TodoAppStack --query 'Stacks[0].Outputs[?OutputKey==`IdentityPoolId`].OutputValue' --output text)
+          
+          echo "::set-output name=api_url::$API_URL"
+          echo "::set-output name=user_pool_id::$USER_POOL_ID"
+          echo "::set-output name=user_pool_client_id::$USER_POOL_CLIENT_ID"
+          echo "::set-output name=identity_pool_id::$IDENTITY_POOL_ID"
+
+      # 프론트엔드 환경 변수 설정
+      - name: Create Frontend Environment File
+        working-directory: frontend
+        run: |
+          echo "REACT_APP_API_URL=${{ steps.stack-outputs.outputs.api_url }}" > .env.production
+          echo "REACT_APP_USER_POOL_ID=${{ steps.stack-outputs.outputs.user_pool_id }}" >> .env.production
+          echo "REACT_APP_USER_POOL_CLIENT_ID=${{ steps.stack-outputs.outputs.user_pool_client_id }}" >> .env.production
+          echo "REACT_APP_IDENTITY_POOL_ID=${{ steps.stack-outputs.outputs.identity_pool_id }}" >> .env.production
+          echo "REACT_APP_AWS_REGION=ap-northeast-2" >> .env.production
+
+      # 프론트엔드 빌드 및 배포
+      - name: Build and Deploy Frontend
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+          BUCKET_NAME="todo-app-frontend-$(date +%s)"
+          aws s3 mb s3://$BUCKET_NAME
+          aws s3 website s3://$BUCKET_NAME --index-document index.html --error-document index.html
+          
+          # 버킷 정책 설정
+          echo "{
+              \"Version\": \"2012-10-17\",
+              \"Statement\": [
+                  {
+                      \"Sid\": \"PublicReadGetObject\",
+                      \"Effect\": \"Allow\",
+                      \"Principal\": \"*\",
+                      \"Action\": \"s3:GetObject\",
+                      \"Resource\": \"arn:aws:s3:::$BUCKET_NAME/*\"
+                  }
+              ]
+          }" > bucket-policy.json
+          
+          aws s3api put-bucket-policy --bucket $BUCKET_NAME --policy file://bucket-policy.json
+          aws s3 sync build/ s3://$BUCKET_NAME
+          echo "Frontend URL: http://$BUCKET_NAME.s3-website.ap-northeast-2.amazonaws.com"
