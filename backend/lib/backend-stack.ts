@@ -156,8 +156,37 @@ export class BackendStack extends cdk.Stack {
     todos.addMethod('POST', new apigateway.LambdaIntegration(createTodoFunction));
 
     const todo = todos.addResource('{id}');
-    todo.addMethod('PUT', new apigateway.LambdaIntegration(updateTodoFunction));
-    todo.addMethod('DELETE', new apigateway.LambdaIntegration(deleteTodoFunction));
+    
+    // 개별 Todo 리소스에 대한 CORS 설정
+    const todoMethodOptions: apigateway.MethodOptions = {
+      methodResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+          'method.response.header.Access-Control-Allow-Methods': true,
+          'method.response.header.Access-Control-Allow-Headers': true
+        }
+      }]
+    };
+
+    const todoIntegrationOptions: apigateway.IntegrationOptions = {
+      integrationResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': "'https://joosung80.github.io'",
+          'method.response.header.Access-Control-Allow-Methods': "'GET,PUT,DELETE,OPTIONS'",
+          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+        }
+      }]
+    };
+
+    todo.addMethod('PUT', new apigateway.LambdaIntegration(updateTodoFunction, {
+      ...todoIntegrationOptions
+    }), todoMethodOptions);
+
+    todo.addMethod('DELETE', new apigateway.LambdaIntegration(deleteTodoFunction, {
+      ...todoIntegrationOptions
+    }), todoMethodOptions);
 
     // CloudWatch 알람 설정
     const apiErrorAlarm = new cloudwatch.Alarm(this, 'ApiErrorAlarm', {
