@@ -137,12 +137,7 @@ export class BackendStack extends cdk.Stack {
     const api = new apigateway.RestApi(this, 'TodosApi', {
       restApiName: 'Todo Service',
       defaultCorsPreflightOptions: {
-        allowOrigins: [
-          'http://todo-app-frontend-1738156783.s3-website.ap-northeast-2.amazonaws.com',
-          'https://joosung80.github.io',
-          'http://localhost:3000',
-          'http://localhost:3002'
-        ],
+        allowOrigins: ['https://joosung80.github.io'],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowHeaders: [
           'Content-Type',
