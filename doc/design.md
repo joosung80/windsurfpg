@@ -21,6 +21,74 @@
   - DynamoDB: TODO 항목 저장
   - Cognito: 익명 사용자 인증
 
+### 2.3 시스템 상호작용 다이어그램
+
+#### Todo 항목 생성 프로세스
+```mermaid
+sequenceDiagram
+    actor User
+    participant React as React App
+    participant API as API Gateway
+    participant Lambda
+    participant DynamoDB
+    participant Cognito
+
+    User->>React: Todo 항목 입력
+    React->>Cognito: 익명 인증 토큰 요청
+    Cognito-->>React: 인증 토큰 반환
+    React->>API: POST /todos (with token)
+    API->>Lambda: 요청 전달
+    Lambda->>DynamoDB: Todo 항목 저장
+    DynamoDB-->>Lambda: 저장 완료
+    Lambda-->>API: 생성된 Todo 반환
+    API-->>React: 응답
+    React-->>User: UI 업데이트
+```
+
+#### Todo 항목 조회 프로세스
+```mermaid
+sequenceDiagram
+    actor User
+    participant React as React App
+    participant API as API Gateway
+    participant Lambda
+    participant DynamoDB
+    participant Cognito
+
+    User->>React: 페이지 로드
+    React->>Cognito: 익명 인증 토큰 요청
+    Cognito-->>React: 인증 토큰 반환
+    React->>API: GET /todos (with token)
+    API->>Lambda: 요청 전달
+    Lambda->>DynamoDB: Todo 목록 조회
+    DynamoDB-->>Lambda: Todo 목록 반환
+    Lambda-->>API: Todo 목록 반환
+    API-->>React: 응답
+    React-->>User: Todo 목록 표시
+```
+
+#### Todo 항목 수정/삭제 프로세스
+```mermaid
+sequenceDiagram
+    actor User
+    participant React as React App
+    participant API as API Gateway
+    participant Lambda
+    participant DynamoDB
+    participant Cognito
+
+    User->>React: Todo 항목 수정/삭제
+    React->>Cognito: 익명 인증 토큰 요청
+    Cognito-->>React: 인증 토큰 반환
+    React->>API: PUT/DELETE /todos/{id} (with token)
+    API->>Lambda: 요청 전달
+    Lambda->>DynamoDB: Todo 항목 수정/삭제
+    DynamoDB-->>Lambda: 처리 완료
+    Lambda-->>API: 결과 반환
+    API-->>React: 응답
+    React-->>User: UI 업데이트
+```
+
 ## 3. API 설계
 
 ### 3.1 엔드포인트
