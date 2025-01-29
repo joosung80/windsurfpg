@@ -11,6 +11,52 @@
 - 인증: Amazon Cognito
 - 배포: GitHub Pages (프론트엔드), AWS CDK (백엔드)
 
+## 🏗️ 시스템 구조
+
+### 시스템 구성도
+```mermaid
+graph LR
+    User((사용자))
+    subgraph Frontend
+        React[React App]
+        GitHub[GitHub Pages]
+    end
+    subgraph AWS Cloud
+        API[API Gateway]
+        Lambda[Lambda]
+        DynamoDB[(DynamoDB)]
+        Cognito[Cognito]
+    end
+    
+    User --> GitHub
+    GitHub --> React
+    React --> API
+    API --> Lambda
+    Lambda --> DynamoDB
+    React --> Cognito
+```
+
+### 기본 요청 흐름
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend
+    participant API Gateway
+    participant Lambda
+    participant DynamoDB
+
+    User->>Frontend: Todo 작업 요청
+    Frontend->>API Gateway: API 요청
+    API Gateway->>Lambda: 함수 호출
+    Lambda->>DynamoDB: 데이터 처리
+    DynamoDB-->>Lambda: 결과 반환
+    Lambda-->>API Gateway: 응답
+    API Gateway-->>Frontend: 결과 전달
+    Frontend-->>User: UI 업데이트
+```
+
+자세한 시스템 설계 및 시퀀스 다이어그램은 [설계 문서](doc/design.md)를 참조하세요.
+
 ## 🌲 브랜치 관리 전략 (GitHub Flow)
 
 ### 주요 브랜치
