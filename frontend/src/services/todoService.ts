@@ -1,6 +1,6 @@
 import { Todo } from '../types/todo';
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL?.replace(/\/$/, '');
 
 // Todo 목록 조회
 export const getTodos = async (): Promise<Todo[]> => {
